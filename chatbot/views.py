@@ -3,6 +3,10 @@ from .forms import InputForm
 from openai._client import OpenAI
 from django.conf import settings
 from dotenv import load_dotenv
+import textwrap
+import os
+import google.generativeai as genai
+from IPython.display import Markdown
 
 # Create your views here.
 
@@ -15,7 +19,6 @@ def about(request):
 
 load_dotenv()
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
-
 
 def generate_message(system_input, user_input):
     message = [{
@@ -57,8 +60,41 @@ def openai_bot(request):
 
     return render(request, 'chatbot/openai.html', {'form': form, 'response': response_text})
 
+
+
+# generating google gemini response
+GOOGLE_API_KEY = settings.GOOGLE_API_KEY
+
+def to_markdown(text):
+    text = text.replace('*', ' *')
+    return Markdown(textwrap.indent(text,'>', predicate=lambda _:True))
+
+
+genai.configure(api_key=GOOGLE_API_KEY)
+
+
+
+def get_resposne_google(user_input):
+    model = genai.GenerativeModel('gemini-pro')
+    response = model.generate_content(user_input)
+    return (response.text)
+
 def gemini_bot(request):
-    return render(request, "chatbot/gemini.html")
+
+    resposnse_text = None
+
+    if request.method == "POST":
+        form = InputForm(request.POST)
+        if form.is_valid():
+            user_input = form.cleaned_data['user_input']
+            print("user_input",user_input)
+
+            resposnse_text = get_resposne_google(user_input)
+
+    else:
+        form = InputForm()
+
+    return render(request, "chatbot/gemini.html", {'form': form, 'response': resposnse_text})
 
 
 
