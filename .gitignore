@@ -1,4 +1,6 @@
-
+#gitignore files
 code_gemini_pro.ipynb
 .env
-.env
+*.pyc
+.DS_Store
+.DS_Store
